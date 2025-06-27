@@ -1,6 +1,6 @@
-# GitHub PR承認時にUSB電源をONにするシステム
+# GitHub PRマージ時にUSB電源をONにするシステム
 
-このシステムは、GitHubのプルリクエストが承認されたことをトリガーとして、ローカルPCに接続されたUSBデバイスの電源を自動的にONにします。
+このシステムは、GitHubのプルリクエストがマージされたことをトリガーとして、ローカルPCに接続されたUSBデバイスの電源を自動的にONにします。
 
 ## 必要なもの
 
@@ -36,7 +36,7 @@
 4.  **GitHub Actionsの設定:**
 
     *   このリポジトリをGitHubにプッシュすると、`.github/workflows/mqtt-publish.yml` が自動的にActionsとして設定されます。
-    *   このワークフローは、プルリクエストが承認されると、`test.mosquitto.org` の `github/pr/approved` トピックにメッセージを送信します。
+    *   このワークフローは、プルリクエストがマージされると、`test.mosquitto.org` の `github/pr/merged` トピックにメッセージを送信します。
 
 ## 使い方
 
@@ -48,9 +48,9 @@
     python local_usb_controller.py
     ```
 
-2.  **GitHubでプルリクエストを承認:**
+2.  **GitHubでプルリクエストをマージ:**
 
-    このリポジトリでプルリクエストが作成され、それが承認されると、GitHub Actionsが作動します。
+    このリポジトリでプルリクエストが作成され、それがマージされると、GitHub Actionsが作動します。
 
 3.  **USB電源ON:**
 
@@ -62,12 +62,53 @@
 *   `uhubctl` が対応しているUSBハブが必要です。すべてのハブで動作するわけではありません。
 *   このシステムは簡易的なものであり、エラーハンドリングなどは最小限になっています。
 
-## Workflow Test
+## このシステムをAIに作成させるためのプロンプトと準備
 
-This is a test to trigger the workflow.
+### プロンプトの例
 
-Another small change for test-workflow-2.
+以下のような詳細なプロンプトをAIに与えることで、このシステムを効率的に作成させることができます。
 
-Yet another change for test-workflow-3.
+```
+システム概要: GitHub PRが承認されたときに、GitHub ActionsからMQTTを経由してローカルPCのUSBポートの電源をONにするシステムを作成してください。
 
-Final test for test-workflow-4.
+要件:
+- 言語: Python メイン
+- 用途: 一回限りの使い捨てシステム
+- 優先事項: シンプルで理解しやすく、コード量は最小限
+- 設定方法: コード内の一部を書き換えるだけで動作すること
+
+技術スタック:
+- GitHub Actions: PR承認時のトリガー (後にPRマージ時に変更)
+- MQTT: paho-mqttライブラリ使用、test.mosquitto.orgを利用
+- USB制御: uhubctlコマンドを使用
+- Python 3: ローカルPC用のスクリプト
+
+動作フロー:
+1. GitHubでPRが承認される（pull_request_review - submitted - approved）
+2. GitHub ActionsがMQTTブローカーにメッセージをpublish
+3. ローカルPCのPythonスクリプトがMQTTメッセージをsubscribe
+4. メッセージ受信時にuhubctlコマンドでUSBポートをON
+
+作成すべきファイル:
+- .github/workflows/mqtt-publish.yml - GitHub Actionsワークフローファイル
+- local_usb_controller.py - ローカルで実行するPythonスクリプト
+- requirements.txt - Pythonの依存ライブラリ
+- README.md - 設定と使用方法の説明書
+
+期待する出力:
+- 動作確認済みのコード一式
+- 簡潔で実用的なREADME
+- 設定変更箇所の明確な記載
+```
+
+### 人間が事前に用意する必要があるもの
+
+AIにこのシステムを作成させる前に、人間側で以下のものを準備しておく必要があります。
+
+*   **GitHubリポジトリ**: 空のリポジトリでも構いません。AIがコードをプッシュするために必要です。
+*   **GitHub Personal Access Token (PAT)**: AIがGitHubリポジトリにアクセスし、Actionsを操作するために必要です。以下のスコープを付与してください。
+    *   `repo` (リポジトリの読み書き権限)
+    *   `workflow` (GitHub Actionsのワークフローの読み書き権限)
+*   **ローカルPCへのPython 3のインストール**: ローカルで実行するスクリプトのために必要です。
+*   **ローカルPCへの `uhubctl` のインストールと設定**: USBポートを制御するためのコマンドラインツールです。お使いのOSに合わせてインストールし、パスを通しておく必要があります。
+*   **インターネット接続**: MQTTブローカー (`test.mosquitto.org`) への接続のために必要です。
