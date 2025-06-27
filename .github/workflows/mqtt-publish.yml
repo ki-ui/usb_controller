@@ -8,15 +8,23 @@ jobs:
   publish-on-approve:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install mosquitto-clients
+        run: sudo apt-get update && sudo apt-get install -y mosquitto-clients
+
       - name: Dump GitHub context
         run: echo "${{ toJSON(github.event) }}"
+
+      - name: Write review state to file
+        run: echo "${{ github.event.review.state }}" > review_state.txt
 
       - name: Check review state and publish MQTT message
         run: |
           echo "Review state: ${{ github.event.review.state }}"
           if [ "${{ github.event.review.state }}" == "approved" ]; then
             echo "Review is approved. Publishing MQTT message."
-            sudo apt-get update && sudo apt-get install -y mosquitto-clients
             mosquitto_pub -h test.mosquitto.org -p 1883 -t "github/pr/approved" -m "PR approved by ${{ github.actor }}"
           else
             echo "Review is not approved. Skipping MQTT message."
