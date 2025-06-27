@@ -65,3 +65,5 @@
 ## Workflow Test
 
 This is a test to trigger the workflow.
+
+Another small change for test-workflow-2.
