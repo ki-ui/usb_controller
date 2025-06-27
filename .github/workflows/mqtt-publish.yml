@@ -1,12 +1,13 @@
 name: MQTT Publisher on PR Approval
 
 on:
-  pull_request_review:
-    types: [submitted]
+  pull_request:
+    types: [closed]
 
 jobs:
-  publish-on-approve:
+  publish-on-merge:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -14,18 +15,7 @@ jobs:
       - name: Install mosquitto-clients
         run: sudo apt-get update && sudo apt-get install -y mosquitto-clients
 
-      - name: Dump GitHub context
-        run: echo "${{ toJSON(github.event) }}"
-
-      - name: Write review state to file
-        run: echo "${{ github.event.review.state }}" > review_state.txt
-
-      - name: Check review state and publish MQTT message
+      - name: Publish MQTT message
         run: |
-          echo "Review state: ${{ github.event.review.state }}"
-          if [ "${{ github.event.review.state }}" == "approved" ]; then
-            echo "Review is approved. Publishing MQTT message."
-            mosquitto_pub -h test.mosquitto.org -p 1883 -t "github/pr/approved" -m "PR approved by ${{ github.actor }}"
-          else
-            echo "Review is not approved. Skipping MQTT message."
-          fi
+          echo "Pull request merged. Publishing MQTT message."
+          mosquitto_pub -h test.mosquitto.org -p 1883 -t "github/pr/merged" -m "PR merged: ${{ github.event.pull_request.title }} by ${{ github.actor }}"
