@@ -1,0 +1,17 @@
+name: MQTT Publisher on PR Approval
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  publish-on-approve:
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'approved'
+    steps:
+      - name: Install mosquitto-clients
+        run: sudo apt-get update && sudo apt-get install -y mosquitto-clients
+
+      - name: Publish MQTT message
+        run: |
+          mosquitto_pub -h test.mosquitto.org -p 1883 -t "github/pr/approved" -m "PR approved by ${{ github.actor }}"
