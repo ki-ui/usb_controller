@@ -61,3 +61,7 @@
 *   `test.mosquitto.org` は公開されているMQTTブローカーです。機密性の高い情報には使用しないでください。
 *   `uhubctl` が対応しているUSBハブが必要です。すべてのハブで動作するわけではありません。
 *   このシステムは簡易的なものであり、エラーハンドリングなどは最小限になっています。
+
+## Workflow Test
+
+This is a test to trigger the workflow.
