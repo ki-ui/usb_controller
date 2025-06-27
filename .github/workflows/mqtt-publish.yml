@@ -1,7 +1,12 @@
 name: MQTT Publisher on PR Approval
 
 on:
-  pull_request_review:
+  workflow_dispatch:
+    inputs:
+      review_state:
+        description: 'The state of the pull request review (e.g., approved)'
+        required: true
+        default: 'approved'
 
 jobs:
   publish-on-approve:
@@ -21,8 +26,8 @@ jobs:
 
       - name: Check review state and publish MQTT message
         run: |
-          echo "Review state: ${{ github.event.review.state }}"
-          if [ "${{ github.event.review.state }}" == "approved" ]; then
+          echo "Review state: ${{ github.event.inputs.review_state }}"
+          if [ "${{ github.event.inputs.review_state }}" == "approved" ]; then
             echo "Review is approved. Publishing MQTT message."
             mosquitto_pub -h test.mosquitto.org -p 1883 -t "github/pr/approved" -m "PR approved by ${{ github.actor }}"
           else
